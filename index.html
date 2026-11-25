@@ -1,0 +1,216 @@
+!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تايمر معمل الحاسوب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm, soft, easy on the eyes in a classroom
+  IDEA: the school computer lab — the timer runs on the teacher's monitor
+  PICTURE: a big monitor on a wooden desk, a quiet row of lab computers behind it
+  COLOUR and TYPE: soft sage wall, warm wood, deep teal screen with cream digits; Baloo Bhaijaan 2
+  LAYOUT: the lab scene fills the top, then one calm row of controls and the credit */
+:root{color-scheme:light dark;
+ --wall:light-dark(#22b8cf,#0d5e6b);--wall2:light-dark(#1598ad,#0a4b56);
+ --desk:light-dark(#ff8a3d,#c8632a);--desk2:light-dark(#e86f24,#a54f1f);
+ --bezel:#ffc928;--screen:#ffffff;--glow:#1d2b4f;--soft:#ff3b5c;
+ --ink:#fff;--btn:rgba(255,255,255,.18);--line:rgba(255,255,255,.45)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--wall2);color:var(--ink);font:17px/1.5 "Baloo Bhaijaan 2",system-ui,sans-serif;overflow-x:clip;min-height:100vh}
+.lab{position:relative;padding:64px max(4vw,12px) 0;background:linear-gradient(var(--wall) 0 60%,var(--wall2) 60%);overflow:hidden}
+.lab::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.16) 2px,transparent 2.1px);background-size:26px 26px;pointer-events:none}
+.back{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.monitor{position:relative;max-width:820px;margin:0 auto}
+.bezel{background:var(--bezel);border-radius:26px;padding:clamp(12px,2vw,22px);box-shadow:0 18px 0 rgba(0,0,0,.12),0 24px 40px rgba(0,0,0,.18),inset 0 -8px 0 #f0a500,inset 0 4px 0 #ffe27a}
+.screen{position:relative;background:var(--screen);border-radius:14px;box-shadow:inset 0 0 0 3px #ffe9a8;min-height:min(44vh,440px);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:clamp(14px,3vw,30px);overflow:hidden}
+.screen::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.35),transparent 40%);pointer-events:none}
+.digits{font-weight:800;font-size:clamp(76px,min(22vw,34vh),300px);line-height:1;direction:ltr;font-variant-numeric:tabular-nums;color:var(--glow);letter-spacing:.02em;transition:color .4s}
+.digits span{display:inline-block;text-shadow:0 6px 0 rgba(0,0,0,.08)}
+.digits .c{color:#c9ced8;padding:0 .02em}
+.last .digits span:not(.c){color:var(--soft)!important;animation:beat 1s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.07)}}
+.done .digits{animation:breathe 1.2s ease-in-out infinite alternate}
+@keyframes breathe{to{opacity:.55}}
+.prog{width:min(80%,720px);height:16px;border-radius:8px;background:#eef1f6;margin-top:clamp(10px,2vw,22px);overflow:hidden}
+.prog i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff3b5c,#ff9f1c,#ffd60a,#2ec27e,#1c9bef,#7b5cff);border-radius:8px;transition:width .15s linear;margin-inline-start:auto}
+.msg{color:var(--glow);font-weight:800;font-size:clamp(17px,2.4vw,24px);margin:12px 0 0;min-height:1.5em}
+.neck{width:12%;height:clamp(26px,4vw,46px);margin:0 auto;background:linear-gradient(90deg,#ffd447,#f0a500)}
+.foot{width:30%;height:14px;margin:0 auto;background:#ffc928;box-shadow:inset 0 -4px 0 #f0a500;border-radius:10px 10px 4px 4px}
+.desk{height:clamp(46px,7vw,80px);background:linear-gradient(var(--desk) 0 30%,var(--desk2) 30%);margin:0 calc(-1*max(4vw,12px));position:relative}
+.kb{position:absolute;top:6px;left:50%;translate:-50% 0;width:min(44%,420px);height:clamp(14px,2vw,22px);border-radius:6px;background:#e9ece9;box-shadow:0 3px 0 #b9bfba;background-image:repeating-linear-gradient(90deg,transparent 0 10px,#cfd5d0 10px 11px)}
+.mouse{position:absolute;top:8px;left:calc(50% + min(26%,250px));width:clamp(14px,1.8vw,20px);height:clamp(20px,2.6vw,28px);border-radius:10px;background:#e9ece9;box-shadow:0 3px 0 #b9bfba}
+.ctrl{max-width:1080px;margin:0 auto;padding:22px max(4vw,12px) 10px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center}
+button{font:inherit;font-weight:700;border:1px solid var(--line);border-radius:16px;min-height:52px;padding:6px 20px;cursor:pointer;color:var(--ink);background:var(--btn);transition:transform .1s,background .2s}
+button:active{transform:translateY(2px)}
+button:focus-visible{outline:3px solid #ffd60a;outline-offset:3px}
+.step{display:flex;align-items:center;gap:6px;background:var(--btn);border:1px solid var(--line);border-radius:18px;padding:4px}
+.step button{border:0;min-width:52px;font-size:28px;padding:0;background:transparent}
+.step output{min-width:118px;text-align:center;font-size:22px;font-weight:800;white-space:nowrap}
+#go{background:#2ec27e;color:#fff;border-color:#2ec27e;box-shadow:0 5px 0 #1f9a62;min-width:150px;font-size:22px}
+#snd[aria-pressed=false]{opacity:.55}
+.hint{text-align:center;font-size:14px;opacity:.7;margin:0 0 6px}
+.credit{text-align:center;padding:18px 12px 30px;font-size:18px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.15);border-top:1px solid var(--line);max-width:1080px;margin:10px auto 0}
+:fullscreen{background:var(--wall)}:fullscreen .screen{min-height:70vh}:fullscreen .digits{font-size:min(30vw,52vh)}
+@media(max-width:600px){.ctrl{gap:10px}.step output{min-width:96px;font-size:19px}#go{min-width:120px}.mouse{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="wrap">
+<section class="lab">
+<svg class="back" id="back" aria-hidden="true"></svg>
+<div class="monitor">
+<div class="bezel">
+<div class="screen" id="screen">
+<div class="digits" id="t" role="timer">02:00</div>
+<div class="prog"><i id="bar"></i></div>
+<p class="msg" id="msg" aria-live="polite"></p>
+</div>
+</div>
+<div class="neck"></div><div class="foot"></div>
+</div>
+<div class="desk"><div class="kb"></div><div class="mouse"></div></div>
+</section>
+<div class="ctrl">
+<div class="step" role="group" aria-label="اختيار الوقت">
+<button id="minus" aria-label="أقل">−</button>
+<output id="val">2 دقيقة</output>
+<button id="plus" aria-label="أكثر">+</button>
+</div>
+<button id="go">ابدأ ▶</button>
+<button id="reset">إعادة</button>
+<button id="snd" aria-pressed="true">الصوت: يعمل</button>
+<button id="full">ملء الشاشة</button>
+</div>
+<footer class="credit">تصميم منسقة تكنولوجيا المعلومات: عليا المهندي</footer>
+</div>
+<script>
+{
+const $=id=>document.getElementById(id);
+const STEPS=[30,60,120,180,240,300,360,420,480,540,600];
+const label=s=>s===30?'30 ثانية':s===60?'دقيقة':s===120?'دقيقتين':(s/60)+' دقائق';
+let idx=2,total=120,left=120,run=false,end=0,iv=null,ac=null,lastSec=-1,sound=true;
+/* the computer lab: lights, sign, window, code poster, back row of desks, plant */
+function drawBack(){
+ const s=$('back'),W=s.clientWidth,H=s.clientHeight;if(!W)return;
+ const mw=document.querySelector('.monitor').offsetWidth,side=(W-mw)/2,dy=H*.6;
+ let h=`<defs><radialGradient id="lg"><stop offset="0" stop-color="#fff6cf" stop-opacity=".9"/><stop offset="1" stop-color="#fff6cf" stop-opacity="0"/></radialGradient>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd4ec"/><stop offset="1" stop-color="#d8effa"/></linearGradient></defs>`;
+ /* ceiling lights */
+ [.18,.5,.82].forEach(f=>{const x=W*f;h+=`<ellipse cx="${x}" cy="40" rx="${Math.min(160,W*.14)}" ry="70" fill="url(#lg)" opacity=".7"/><line x1="${x}" y1="0" x2="${x}" y2="14" stroke="#b9a98a" stroke-width="2"/><rect x="${x-48}" y="14" width="96" height="10" rx="5" fill="#fff8e1" stroke="#e3d3b0"/>`});
+ /* window */
+ if(side>150){const w=Math.min(230,side*.72),x=side*.14,y=110,wh=Math.min(w*.95,dy-y-30);
+   h+=`<rect x="${x-8}" y="${y-8}" width="${w+16}" height="${wh+16}" rx="10" fill="#fff"/><rect x="${x}" y="${y}" width="${w}" height="${wh}" rx="4" fill="url(#sky)"/>
+<circle cx="${x+w*.75}" cy="${y+wh*.28}" r="${w*.1}" fill="#ffe28a"/>
+<g fill="#fff"><ellipse cx="${x+w*.32}" cy="${y+wh*.45}" rx="${w*.18}" ry="${w*.06}"/><ellipse cx="${x+w*.4}" cy="${y+wh*.4}" rx="${w*.1}" ry="${w*.07}"/></g>
+<path d="M${x} ${y+wh*.82}q${w*.25} -${wh*.18} ${w*.5} 0t${w*.5} 0V${y+wh}H${x}Z" fill="#8cc79a"/>
+<rect x="${x+w/2-3}" y="${y}" width="6" height="${wh}" fill="#fff"/><rect x="${x}" y="${y+wh/2-3}" width="${w}" height="6" fill="#fff"/>
+<rect x="${x-14}" y="${y+wh+8}" width="${w+28}" height="8" rx="3" fill="#ffc928"/>`}
+ /* code poster and sticky notes */
+ if(side>150){const w=Math.min(210,side*.68),x=W-side*.14-w,y=110,ph=Math.min(w*1.05,dy-y-30);
+   h+=`<rect x="${x}" y="${y}" width="${w}" height="${ph}" rx="10" fill="#ffd18a" stroke="#ff9f1c" stroke-width="6"/>
+<rect x="${x+w*.1}" y="${y+ph*.1}" width="${w*.55}" height="${ph*.6}" rx="4" fill="#fffaf0" transform="rotate(-3 ${x+w*.37} ${y+ph*.4})"/>
+<text x="${x+w*.37}" y="${y+ph*.36}" text-anchor="middle" font-family="monospace" font-weight="700" font-size="${w*.17}" fill="#7b5cff" direction="ltr">&lt;/&gt;</text>
+   ${[0,1,2].map(i=>`<rect x="${x+w*.16}" y="${y+ph*(.47+i*.07)}" width="${w*(.42-i*.08)}" height="${ph*.03}" rx="2" fill="${['#ff3b5c','#2ec27e','#1c9bef'][i]}"/>`).join('')}
+<rect x="${x+w*.68}" y="${y+ph*.14}" width="${w*.24}" height="${w*.24}" fill="#ffd60a" transform="rotate(5 ${x+w*.8} ${y+ph*.25})"/>
+<rect x="${x+w*.66}" y="${y+ph*.52}" width="${w*.24}" height="${w*.24}" fill="#ff8fc1" transform="rotate(-4 ${x+w*.78} ${y+ph*.62})"/>
+<circle cx="${x+w*.8}" cy="${y+ph*.16}" r="4" fill="#d9534f"/><circle cx="${x+w*.37}" cy="${y+ph*.12}" r="4" fill="#1c9bef"/>`}
+ /* back row of desks with computers and chairs */
+ h+=`<rect x="0" y="${dy}" width="${W}" height="12" fill="#fff4d6"/><rect x="0" y="${dy+12}" width="${W}" height="5" fill="#f0c96a"/>`;
+ const step=W<600?110:140;
+ const CB=['#ff3b5c','#2ec27e','#7b5cff','#ff9f1c','#1c9bef','#ff5fa2'];let ci=0;
+ for(let x=step/2;x<W;x+=step){
+   if(Math.abs(x-W/2)<mw/2+30)continue;
+   const w=70,cb=CB[ci++%CB.length];
+   h+=`<g><rect x="${x-w/2}" y="${dy-52}" width="${w}" height="44" rx="6" fill="${cb}"/><rect x="${x-w/2+5}" y="${dy-47}" width="${w-10}" height="32" rx="3" fill="#1d2b4f"/>
+<rect x="${x-w/2+11}" y="${dy-41}" width="22" height="3" rx="1.5" fill="#ffd60a"/><rect x="${x-w/2+11}" y="${dy-35}" width="34" height="3" rx="1.5" fill="#9fd3c7"/><rect x="${x-w/2+17}" y="${dy-29}" width="18" height="3" rx="1.5" fill="#e8a0a0"/><rect x="${x-w/2+11}" y="${dy-23}" width="28" height="3" rx="1.5" fill="#9fd3c7"/>
+<rect x="${x-5}" y="${dy-8}" width="10" height="8" fill="${cb}"/><rect x="${x-26}" y="${dy-3}" width="52" height="4" rx="2" fill="#f4ecd8"/>
+<rect x="${x-24}" y="${dy+26}" width="48" height="38" rx="12" fill="${cb}" opacity=".9"/><rect x="${x-28}" y="${dy+60}" width="56" height="10" rx="5" fill="#1d2b4f" opacity=".35"/></g>`;
+ }
+ /* plant */
+ if(side>90){const x=Math.max(34,side*.55)-(side>150?0:0),px=W-x;
+   h+=`<g><path d="M${px} ${dy-30}c-20-30-6-60 0-70c6 10 20 40 0 70Z" fill="#6fae7c"/><path d="M${px} ${dy-30}c-30-14-36-40-34-48c10 2 34 18 34 48Z" fill="#7fbf8a"/><path d="M${px} ${dy-30}c30-14 36-40 34-48c-10 2-34 18-34 48Z" fill="#5e9e6c"/>
+<path d="M${px-18} ${dy-32}h36l-5 32h-26Z" fill="#ff5fa2"/><rect x="${px-21}" y="${dy-36}" width="42" height="7" rx="3" fill="#e8448a"/></g>`}
+ s.innerHTML=h;
+}
+const ro=new ResizeObserver(drawBack);ro.observe(document.querySelector('.lab'));
+const fmt=x=>{x=Math.ceil(x);return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0')};
+function audio(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}}
+function tone(f,d,v,type){if(!ac)return;try{const o=ac.createOscillator(),g=ac.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d+.02)}catch(e){}}
+function tick(s){
+ if(!ac)return;
+ try{
+   const t=ac.currentTime,hi=s%2;
+   /* mechanical wall clock: short sharp click, "tick" high and "tock" lower */
+   const len=Math.floor(ac.sampleRate*.012),n=ac.createBuffer(1,len,ac.sampleRate),d=n.getChannelData(0);
+   for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,6);
+   const src=ac.createBufferSource();src.buffer=n;
+   const f1=ac.createBiquadFilter();f1.type='bandpass';f1.frequency.value=hi?4200:2400;f1.Q.value=12;
+   const f2=ac.createBiquadFilter();f2.type='highpass';f2.frequency.value=hi?1800:1000;
+   const g=ac.createGain();g.gain.value=hi?9:11;
+   const comp=ac.createDynamicsCompressor();comp.threshold.value=-12;comp.ratio.value=6;
+   const out=ac.createGain();out.gain.value=1.6;
+   src.connect(f1).connect(f2).connect(g).connect(comp).connect(out).connect(ac.destination);
+   src.start(t);
+ }catch(e){}
+}
+function bell(){for(let r=0;r<3;r++)[0,1,2].forEach(k=>setTimeout(()=>tone([1047,1319,1568][k],.6,.3,'triangle'),r*900+k*160))}
+function draw(){
+ const DC=['#ff3b5c','#ff9f1c','','#2ec27e','#1c9bef'];
+ $('t').innerHTML=fmt(left).split('').map((c,i)=>c===':'?'<span class="c">:</span>':`<span style="color:${DC[i]}">${c}</span>`).join('');
+ $('bar').style.width=(total?left/total*100:0)+'%';
+ $('screen').classList.toggle('last',run&&left<=10);
+ $('val').textContent=label(STEPS[idx]);
+ document.title=run?fmt(left)+' — التايمر':'تايمر معمل الحاسوب';
+}
+function step(){
+ left=Math.max(0,(end-Date.now())/1000);
+ const s=Math.ceil(left);
+ if(s!==lastSec&&s>0&&sound)tick(s);
+ lastSec=s;draw();
+ if(left<=0)finish();
+}
+function stop(){run=false;clearInterval(iv);iv=null}
+function finish(){
+ stop();left=0;draw();
+ $('screen').classList.add('done');$('msg').textContent='انتهى الوقت، أحسنتم';
+ $('go').textContent='ابدأ ▶';
+ if(sound)bell();
+}
+function setIdx(i){
+ idx=Math.max(0,Math.min(STEPS.length-1,i));
+ stop();total=left=STEPS[idx];lastSec=-1;
+ $('screen').classList.remove('done','last');$('go').textContent='ابدأ ▶';
+ $('msg').textContent='';draw();
+}
+function toggle(){
+ audio();
+ if(run){stop();$('go').textContent='متابعة ▶';$('msg').textContent='متوقف مؤقتاً';return}
+ if(left<=0){total=left=STEPS[idx]}
+ run=true;end=Date.now()+left*1000;
+ $('screen').classList.remove('done');
+ $('go').textContent='إيقاف ⏸';$('msg').textContent='الوقت يجري…';
+ iv=setInterval(step,100);
+}
+$('go').onclick=toggle;
+$('reset').onclick=()=>setIdx(idx);
+$('minus').onclick=()=>setIdx(idx-1);
+$('plus').onclick=()=>setIdx(idx+1);
+$('snd').onclick=()=>{sound=!sound;$('snd').setAttribute('aria-pressed',sound);$('snd').textContent=sound?'الصوت: يعمل':'الصوت: متوقف'};
+$('full').onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else $('wrap').requestFullscreen().catch(()=>{})}catch(e){}};
+document.addEventListener('keydown',e=>{
+ if(e.target.tagName==='INPUT')return;
+ if(e.code==='Space'){e.preventDefault();toggle()}
+ else if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();setIdx(idx+1)}
+ else if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();setIdx(idx-1)}
+ else if(/^[0-9]$/.test(e.key)){setIdx(e.key==='0'?10:+e.key)}
+});
+draw();
+}
+</script>
+</body>
+</html>
+has context menu
